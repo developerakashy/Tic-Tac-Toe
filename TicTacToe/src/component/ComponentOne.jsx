@@ -2,30 +2,43 @@ import React, { useEffect, useRef, useState } from 'react'
 import './styles.css'
 
 function ComponentOne(){
-    const [count, setCount] = useState(5)
-
+    const [str, setStr] = useState('O')
+    const [count, setCount] = useState(4)
+    const [divArray, setDivArray] = useState([])
     const [check, setCheck] = useState(true)
+    const initialArray = Array(count * count).fill(undefined)
+    const [player1, setPlayer1] = useState([...initialArray])
+    const [player2, setPlayer2] = useState([...initialArray])
+    const [disabledButtons, setDisableButtons] = useState(Array(count * count).fill(false))
+
     const [vertical, horizontal] = linearArrayCheck()
     const [leftDiagonal, rightDiagonal] = diagonalArrayCheck()
 
 
-    const initialArray = Array(count * count).fill()
-    const [player1, setPlayer1] = useState(initialArray)
-    const [player2, setPlayer2] = useState(initialArray)
 
 
 
     useEffect(() => {
-        const vertical = gameWinner()
-        if(vertical !== false){
-            console.log(vertical)
-            setPlayer1(initialArray)
-            setPlayer2(initialArray)
-
+        // console.log('useeffect1:',check)
+        const vertical1 = gameWinner()
+        if(vertical1 !== false){
+            setDisableButtons(Array(count * count).fill(true))
+            console.log(vertical1)
         }
 
 
-    })
+    },[check])
+
+    useEffect(() => {
+        // console.log('useEffext2')
+        const newDivArray = horizontal.map((array,index) => <div key={index}>
+        {array.map((item) => <button key={item} onClick={(event) => handleClick(event,item - 1)} disabled={disabledButtons[item - 1]}>{str}</button>)}
+        </div>)
+
+        setDivArray(newDivArray)
+
+
+    }, [player1,player2,disabledButtons])
 
     const gameWinner = () => {
         const verticalArrayPlayer1 = vertical.map((array,index) =>
@@ -57,10 +70,10 @@ function ComponentOne(){
         let horizontalCheckPlayer2 = horizontalArrayPlayer2.filter(val => val !== false)
 
         if(verticalCheckPlayer1.length || verticalCheckPlayer2.length){
-            return {Column : vertical[verticalCheckPlayer1[0]] ? vertical[verticalCheckPlayer1[0]] : vertical[verticalCheckPlayer2[0]]}
+            return verticalCheckPlayer1.length ? {column: vertical[verticalCheckPlayer1[0]], player: 'Player1'} :{column: vertical[verticalCheckPlayer2[0]], player: 'Player2'}
         }
         else if(horizontalCheckPlayer1.length || horizontalCheckPlayer2.length){
-            return {Row: horizontal[horizontalCheckPlayer1[0]] ? horizontal[horizontalCheckPlayer1[0]] : horizontal[horizontalCheckPlayer2[0]]}
+            return horizontalCheckPlayer1 ? {row: horizontal[horizontalCheckPlayer1[0]], player: 'Player1'} :{row:  horizontal[horizontalCheckPlayer2[0]], player: 'Player2'}
 
         }else if(leftDiagonalArrayPlayer1 || leftDiagonalArrayPlayer2){
             return {leftArray: leftDiagonal, player: leftDiagonalArrayPlayer1 ? 'Player1' : 'Player2'}
@@ -139,32 +152,51 @@ function ComponentOne(){
 
 
 
-    const clickListener = (event, btn_index) => {
+    const handleClick = (event, btn_index) => {
+        // console.log('clicked:',check)
+        console.log(check)
         if(check){
+            console.log('player1')
             event.target.textContent = 1
             player1.splice(btn_index, 1, 0)
-            setCheck(false)
+
+
         }else{
+            console.log('player2')
             event.target.textContent = 0
             player2.splice(btn_index, 1, 1)
-            setCheck(true)
+
         }
+        const newDisabledButtons = [...disabledButtons]
+        newDisabledButtons[btn_index] = true
+        setDisableButtons(newDisabledButtons)
 
-        console.log(player1.length)
+        console.log(player1)
+        console.log(player2)
+        setCheck(prevState => {
 
+            return !prevState
+        })
+
+    }
+
+    const reset = () => {
+        setDisableButtons(Array(count).fill(false))
+            setPlayer1([...initialArray])
+            setPlayer2([...initialArray])
+            setStr(prevState => prevState === 'O' ? 'X' : 'O')
+            setCheck(true)
     }
 
 
 
-    let divArray = horizontal.map((array,index) => <div key={index}>
-        {array.map((item)=> <button key={item} onClick={(event) => clickListener(event,item - 1)}></button>)}
-    </div>)
+
 
     return(
         <div>
             <input type="number" />
             {divArray}
-            {/* <button onClick={}>Reset</button> */}
+            <button onClick={reset}>Reset</button>
         </div>
     )
 }
